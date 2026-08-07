@@ -46,12 +46,20 @@
     if(uid) u+="&lineUid="+encodeURIComponent(uid)+"&lineName="+encodeURIComponent(name||"");
     location.replace(u);
   }
-  // 안전장치: 6초 안에 프로필 못 얻어도 토큰만으로 개인화 페이지로 진행
-  setTimeout(function(){ go("",""); }, 6000);
+  // 안전장치: 8초 안에 프로필 못 얻어도 토큰만으로 개인화 페이지로 진행
+  setTimeout(function(){ go("",""); }, 8000);
   try{
     liff.init({liffId:LIFF_ID}).then(function(){
-      liff.getProfile().then(function(p){ go(p&&p.userId, p&&p.displayName); })
-                       .catch(function(){ go("",""); });
+      if(liff.isLoggedIn && liff.isLoggedIn()){
+        // LINE 앱 안(모바일) — 이미 로그인 → 바로 프로필
+        liff.getProfile().then(function(p){ go(p&&p.userId, p&&p.displayName); })
+                         .catch(function(){ go("",""); });
+      } else if(!sessionStorage.getItem('unniLoginTried')){
+        // LINE 밖(데스크톱/외부 브라우저/OA Manager) — 미로그인 → 로그인 1회 유도(복귀 후 재실행)
+        sessionStorage.setItem('unniLoginTried','1'); moved=true; liff.login();
+      } else {
+        go("","");   // 로그인 시도했는데도 미로그인 → 토큰만으로 진행(무한루프 방지)
+      }
     }).catch(function(){ go("",""); });
   }catch(e){ go("",""); }
 </script>
