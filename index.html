@@ -27,7 +27,12 @@
   </div>
 <script>
   var LIFF_ID="2010909878-w45QPkcJ";
-  var EXEC="https://script.google.com/macros/s/AKfycbwIvZ_Oq8SCzbk4rXIUN58Arlk5lX0Q73F0nGUdXDj1DNoeJpS6VRQX65sgPBTvMF2O/exec";
+  // 연도별 웹앱 — 링크에 y=2027 이 있으면 2027 파일, 없으면 2026(기존 링크 호환)
+  var EXECS={
+    "2026":"https://script.google.com/macros/s/AKfycbwIvZ_Oq8SCzbk4rXIUN58Arlk5lX0Q73F0nGUdXDj1DNoeJpS6VRQX65sgPBTvMF2O/exec",
+    "2027":"https://script.google.com/macros/s/AKfycbwHSGljcLYKoldxPKrIt7XzGhe6vTR32X2jmBpWo_EYCQesEoDr_BIGgm4E_dSnZ7jboQ/exec"
+  };
+  var EXEC=EXECS[(location.href.match(/(?:[?&#]|%26|%3F)y(?:=|%3D)(20\d\d)/i)||[])[1]]||EXECS["2026"];
   function qp(name){
     var s=location.search.substring(1)+"&"+location.hash.substring(1);
     var re=new RegExp("(?:^|&)"+name.replace(/[.]/g,"\\.")+"=([^&]*)");
