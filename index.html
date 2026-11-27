@@ -32,7 +32,8 @@
     "2026":"https://script.google.com/macros/s/AKfycbwIvZ_Oq8SCzbk4rXIUN58Arlk5lX0Q73F0nGUdXDj1DNoeJpS6VRQX65sgPBTvMF2O/exec",
     "2027":"https://script.google.com/macros/s/AKfycbwHSGljcLYKoldxPKrIt7XzGhe6vTR32X2jmBpWo_EYCQesEoDr_BIGgm4E_dSnZ7jboQ/exec"
   };
-  var EXEC=EXECS[(location.href.match(/(?:[?&#]|%26|%3F)y(?:=|%3D)(20\d\d)/i)||[])[1]]||EXECS["2026"];
+  var YR=(location.href.match(/(?:[?&#]|%26|%3F)y(?:=|%3D)(20\d\d)/i)||[])[1];
+  var EXEC=EXECS[YR]||EXECS["2026"];
   function qp(name){
     var s=location.search.substring(1)+"&"+location.hash.substring(1);
     var re=new RegExp("(?:^|&)"+name.replace(/[.]/g,"\\.")+"=([^&]*)");
@@ -45,8 +46,20 @@
     var m2=location.href.match(/token(?:=|%3D)([A-Za-z0-9]+)/); return m2?m2[1]:"";
   }
   var token=getToken(), moved=false;
+  // 링크에 연도 표시가 없으면 2027 웹앱에 토큰이 있는지 물어서 결정 (6초 안에 답 없으면 2026)
+  var ready=(YR||!token)?Promise.resolve():new Promise(function(res){
+    var done=false, fin=function(){ if(!done){ done=true; res(); } };
+    setTimeout(fin,6000);
+    try{
+      fetch(EXECS["2027"]+"?check="+encodeURIComponent(token)).then(function(r){return r.json();})
+        .then(function(j){ if(j&&j.ok) EXEC=EXECS["2027"]; fin(); }).catch(fin);
+    }catch(e){ fin(); }
+  });
   function go(uid,name){
     if(moved) return; moved=true;
+    ready.then(function(){ nav(uid,name); });
+  }
+  function nav(uid,name){
     var u=EXEC+"?token="+encodeURIComponent(token||"");
     if(uid) u+="&lineUid="+encodeURIComponent(uid)+"&lineName="+encodeURIComponent(name||"");
     location.replace(u);
